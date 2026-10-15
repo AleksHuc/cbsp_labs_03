@@ -20,9 +20,9 @@ Run from the project root:
 
 ```bash
 mvn clean compile
-mvn -q compile exec:java -Dexec.args="--parameters 11111111"
-mvn -q compile exec:java -Dexec.args="--check1 11111111"
-mvn -q compile exec:java -Dexec.args="--task1 11111111"
+mvn -q compile exec:java "-Dexec.args=--parameters 11111111"
+mvn -q compile exec:java "-Dexec.args=--check1 11111111"
+mvn -q compile exec:java "-Dexec.args=--task1 11111111"
 ```
 
 Replace `11111111` with your eight-digit student ID, including leading zeroes.
@@ -47,7 +47,7 @@ The Task 4 synthetic comparison prints metrics without playback or audio export.
 In IntelliJ, run `Main.main` as an **Application** configuration with
 `--check2 11111111` in **Program arguments** and the project root as the
 **Working directory**. For a Maven configuration, use
-`compile exec:java -Dexec.args="--check2 11111111"` in its command field,
+`compile exec:java "-Dexec.args=--check2 11111111"` in its command field,
 without the initial `mvn`.
 
 Outputs are in `output/<student-id>/`. Repeating an experiment replaces files
@@ -106,8 +106,8 @@ Outputs: `task1-original.wav`, `task1-simple.wav`, `task1-differences.csv`.
 Check without playback, then run with playback:
 
 ```bash
-mvn -q compile exec:java -Dexec.args="--check1 11111111"
-mvn -q compile exec:java -Dexec.args="--task1 11111111"
+mvn -q compile exec:java "-Dexec.args=--check1 11111111"
+mvn -q compile exec:java "-Dexec.args=--task1 11111111"
 ```
 
 ## Task 2 — Window detection and interpolation
@@ -163,8 +163,8 @@ Outputs: `task2-original.wav`, `task2-windowed.wav`, `task2-scores.csv`,
 Check without playback, then run with playback:
 
 ```bash
-mvn -q compile exec:java -Dexec.args="--check2 11111111"
-mvn -q compile exec:java -Dexec.args="--task2 11111111"
+mvn -q compile exec:java "-Dexec.args=--check2 11111111"
+mvn -q compile exec:java "-Dexec.args=--task2 11111111"
 ```
 
 ## Task 3 — Faster window calculations
@@ -190,8 +190,8 @@ benchmark warm-up. Task 3 retains Task 2's unrestricted repair widths.
 Check without playback, then run with playback:
 
 ```bash
-mvn -q compile exec:java -Dexec.args="--check3 11111111"
-mvn -q compile exec:java -Dexec.args="--task3 11111111"
+mvn -q compile exec:java "-Dexec.args=--check3 11111111"
+mvn -q compile exec:java "-Dexec.args=--task3 11111111"
 ```
 
 ## Task 4 — Tune detection and limit repair width
@@ -242,8 +242,8 @@ These quality metrics are not claimed for `pops.wav`.
 Check without playback, then run with playback:
 
 ```bash
-mvn -q compile exec:java -Dexec.args="--check4 11111111"
-mvn -q compile exec:java -Dexec.args="--task4 11111111"
+mvn -q compile exec:java "-Dexec.args=--check4 11111111"
+mvn -q compile exec:java "-Dexec.args=--task4 11111111"
 ```
 
 ## Task 5 — Adaptive threshold
@@ -291,8 +291,8 @@ Outputs:
 Check without playback, then run with playback:
 
 ```bash
-mvn -q compile exec:java -Dexec.args="--check5 11111111"
-mvn -q compile exec:java -Dexec.args="--task5 11111111"
+mvn -q compile exec:java "-Dexec.args=--check5 11111111"
+mvn -q compile exec:java "-Dexec.args=--task5 11111111"
 ```
 
 ## Conventions and architecture
