@@ -66,13 +66,13 @@ in `RecordingExamples` are for independent checks, not detector input.
 
 Use these topics to guide discussion, not as a script for supplying solutions:
 
-| Task | Concepts and observations to discuss |
-| --- | --- |
-| 1 | Current input versus previous corrected output, strict comparisons, zero propagation and recovery, validation in the processing pass. |
-| 2 | Mean-square energy, centered small windows and integer offsets, full-window coverage, merging overlapping and adjacent regions, intact interpolation anchors. |
-| 3 | Rolling squared-sample sums, outgoing and incoming indices, O(N) work, floating-point agreement and the limits of a single timing measurement. |
-| 4 | Threshold and window-size tradeoffs, inclusive merged-region width, skipping complete regions, and synthetic reference metrics versus recording diagnostics. |
-| 5 | Local score context, population variance, prefix sums, scaling to avoid overflow, roundoff, threshold floors and clicks influencing their own statistics. |
+| Task | Concepts and observations to discuss                                                                                                                          |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Current input versus previous corrected output, strict comparisons, zero propagation and recovery, validation in the processing pass.                         |
+| 2    | Mean-square energy, centered small windows and integer offsets, full-window coverage, merging overlapping and adjacent regions, intact interpolation anchors. |
+| 3    | Rolling squared-sample sums, outgoing and incoming indices, O(N) work, floating-point agreement and the limits of a single timing measurement.                |
+| 4    | Threshold and window-size tradeoffs, inclusive merged-region width, skipping complete regions, and synthetic reference metrics versus recording diagnostics.  |
+| 5    | Local score context, population variance, prefix sums, scaling to avoid overflow, roundoff, threshold floors and clicks influencing their own statistics.     |
 
 Discuss input preservation, distinct same-length output buffers, finite values
 and argument validation across tasks. Help the student reason about strict

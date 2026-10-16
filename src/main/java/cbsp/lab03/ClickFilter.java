@@ -2,7 +2,7 @@ package cbsp.lab03;
 
 import java.util.List;
 
-/** Student implementations of the five click-filter tasks, ordered by task. */
+/** All five tasks. Inputs and parameters are assumed valid. */
 public final class ClickFilter {
     private ClickFilter() { }
 
@@ -11,29 +11,29 @@ public final class ClickFilter {
      * Sample 0 is preserved; input is never modified.
      */
     public static double[] simple(double[] samples, double threshold) {
-        // TODO: implement Task 1 according to README.md.
-        throw new UnsupportedOperationException("Task 1: simple is not implemented.");
+        // TODO (Task 1): implement this method.
+        throw new UnsupportedOperationException("TODO (Task 1)");
     }
 
     /** Task 2: complete window filter, using direct mean-square calculations. */
     public static double[] windowed(double[] samples, int largeLength, int smallLength, double threshold) {
-        // TODO: implement Task 2 according to README.md.
-        throw new UnsupportedOperationException("Task 2: windowed is not implemented.");
+        // TODO (Task 2): calculate scores, detect intervals, interpolate them.
+        throw new UnsupportedOperationException("TODO (Task 2)");
     }
 
     /** Task 2: E_small-E_large for each full large window. Empty when N<L.
      * The small window starts at n+(L-S)/2, with integer division.
      */
     public static double[] windowScores(double[] samples, int largeLength, int smallLength) {
-        // TODO: implement Task 2 according to README.md.
-        throw new UnsupportedOperationException("Task 2: windowScores is not implemented.");
+        // TODO (Task 2): directly sum squared samples in each window.
+        throw new UnsupportedOperationException("TODO (Task 2)");
     }
 
     /** Task 2: flag complete small windows, merging overlapping and adjacent regions. */
     public static List<ClickInterval> detectIntervals(double[] scores, int sampleCount,
             int largeLength, int smallLength, double threshold) {
-        // TODO: implement Task 2 according to README.md.
-        throw new UnsupportedOperationException("Task 2: detectIntervals is not implemented.");
+        // TODO (Task 2): apply one positive threshold to every score.
+        throw new UnsupportedOperationException("TODO (Task 2)");
     }
 
     /** Task 2: interpolate between intact anchors a-1 and b+1; return a new buffer.
@@ -41,20 +41,20 @@ public final class ClickFilter {
      * Intervals touching either buffer boundary are left unchanged.
      */
     public static double[] interpolate(double[] samples, List<ClickInterval> intervals) {
-        // TODO: implement Task 2 according to README.md.
-        throw new UnsupportedOperationException("Task 2: interpolate is not implemented.");
+        // TODO (Task 2): replace damaged samples using the neighboring anchors.
+        throw new UnsupportedOperationException("TODO (Task 2)");
     }
 
     /** Task 3: same scores as Task 2 in O(N), using two rolling squared-sample sums. */
     public static double[] windowScoresRolling(double[] samples, int largeLength, int smallLength) {
-        // TODO: implement Task 3 according to README.md.
-        throw new UnsupportedOperationException("Task 3: windowScoresRolling is not implemented.");
+        // TODO (Task 3): initialize both sums; subtract outgoing and add incoming squares.
+        throw new UnsupportedOperationException("TODO (Task 3)");
     }
 
     /** Task 4: skip merged intervals wider than maxRepairWidth, preserving their original samples. */
     public static double[] interpolateLimited(double[] samples, List<ClickInterval> intervals, int maxRepairWidth) {
-        // TODO: implement Task 4 according to README.md.
-        throw new UnsupportedOperationException("Task 4: interpolateLimited is not implemented.");
+        // TODO (Task 4): select eligible intervals and reuse Task 2 interpolation.
+        throw new UnsupportedOperationException("TODO (Task 4)");
     }
 
     /** Task 5: local mean+k*populationStd of scores in [n-radius,n+radius], clipped to bounds.
@@ -62,31 +62,22 @@ public final class ClickFilter {
      * Empty scores return an empty array. Radius is positive, k is finite and nonnegative.
      */
     public static double[] adaptiveThresholds(double[] scores, int radius, double k, double minimumThreshold) {
-        // TODO: implement Task 5 according to README.md.
-        throw new UnsupportedOperationException("Task 5: adaptiveThresholds is not implemented.");
+        // TODO (Task 5): estimate local statistics efficiently and enforce a positive floor.
+        throw new UnsupportedOperationException("TODO (Task 5)");
     }
 
     /** Task 5: detect using a separate finite positive threshold at each score position. */
     public static List<ClickInterval> detectIntervals(double[] scores, int sampleCount,
             int largeLength, int smallLength, double[] thresholds) {
-        // TODO: implement Task 5 according to README.md.
-        throw new UnsupportedOperationException("Task 5: detectIntervals is not implemented.");
+        // TODO (Task 5): apply the threshold at each score position and merge flagged windows.
+        throw new UnsupportedOperationException("TODO (Task 5)");
     }
 
-    /** Task 2 helper: merge flagged small windows into inclusive intervals. */
+    /** Task 2 helper: union flagged windows, then collect maximal true runs as inclusive intervals. */
     private static List<ClickInterval> mergeFlaggedWindows(double[] scores, int sampleCount,
             int largeLength, int smallLength, double[] thresholds) {
-        // TODO: implement Task 2 according to README.md.
-        throw new UnsupportedOperationException("Task 2: mergeFlaggedWindows is not implemented.");
+        // TODO (Task 2): mark full small windows and merge their union into intervals.
+        throw new UnsupportedOperationException("TODO (Task 2)");
     }
 
-    /** Prepared shape validation for externally supplied scores; empty arrays are allowed only for N<L. */
-    private static void validateScores(double[] scores, int sampleCount, int largeLength, int smallLength) {
-        Validation.windows(largeLength, smallLength);
-        if (sampleCount < 1 || scores == null || scores.length != Math.max(0, sampleCount - largeLength + 1))
-            throw new IllegalArgumentException("Score count must match full large windows.");
-        for (double score : scores) {
-            if (!Double.isFinite(score)) throw new IllegalArgumentException("Scores must be finite.");
-        }
-    }
 }

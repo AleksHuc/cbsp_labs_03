@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-/** Checks for completed student implementations of the five tasks. No audio device or external test library needed. */
+/** Independent checks for the five tasks. No audio device or external test library needed. */
 public final class AlgorithmChecks {
     private static int checks;
     private AlgorithmChecks() { }
@@ -42,7 +42,7 @@ public final class AlgorithmChecks {
         require(ClickFilter.simple(input, .5) != input, "Fresh simple output");
         require(Arrays.equals(input, saved), "Simple input unchanged");
 
-        // Tasks 2 and 3: direct/rolling agreement, all window alignments and input immutability.
+        // Tasks 2 and 3: independent direct sums, all window alignments and input immutability.
         same(ClickFilter.windowScores(new double[]{0,0,2,0,0}, 4, 1), new double[]{-1,3});
         same(ClickFilter.windowed(new double[]{0,0,2,0,0}, 4, 1, 1), new double[5]);
         same(ClickFilter.windowed(new double[]{2}, 4, 1, 1), new double[]{2});
@@ -54,7 +54,8 @@ public final class AlgorithmChecks {
             for (int large : new int[]{2,3,4,9,31,121}) {
                 for (int small : new int[]{1,2,3,8,20}) {
                     if (small >= large) continue;
-                    double[] expected = ClickFilter.windowScores(samples, large, small);
+                    double[] expected = directScores(samples, large, small);
+                    same(ClickFilter.windowScores(samples, large, small), expected);
                     same(ClickFilter.windowScoresRolling(samples, large, small), expected);
                     List<ClickInterval> found = ClickFilter.detectIntervals(expected, length, large, small, .05);
                     boolean[] mask = new boolean[length];
@@ -64,7 +65,6 @@ public final class AlgorithmChecks {
                     boolean[] actual = new boolean[length];
                     for (ClickInterval interval : found) Arrays.fill(actual, interval.start(), interval.end() + 1, true);
                     require(Arrays.equals(actual, mask), "Flag entire small windows");
-                    Validation.intervals(samples, found);
                     double[] repaired = ClickFilter.windowed(samples, large, small, .05);
                     same(repaired, ClickFilter.interpolate(samples, found));
                     unchangedOutside(samples, repaired, found, Integer.MAX_VALUE);
@@ -87,23 +87,15 @@ public final class AlgorithmChecks {
         List<ClickInterval> intervals = List.of(new ClickInterval(1,2), new ClickInterval(4,4));
         same(ClickFilter.interpolateLimited(damaged, intervals, 1), new double[]{0,9,9,3,4,5});
         same(ClickFilter.interpolateLimited(damaged, intervals, 2), new double[]{0,1,2,3,4,5});
-        invalid(() -> ClickFilter.interpolateLimited(damaged, intervals, 0));
 
-        // Task 5: known local statistics, clipped end contexts and threshold floors.
+        // Task 5: independently calculate local statistics, including clipped end contexts.
         double[] scores = {-.1,.2,.4,0,1.2,.3,.02};
         double[] originalScores = scores.clone();
-        same(ClickFilter.adaptiveThresholds(new double[]{0,2,0}, 1, 0, .01),
-                new double[]{1, 2.0/3, 1});
-        same(ClickFilter.adaptiveThresholds(new double[]{0,2,0}, 1, 1, .01),
-                new double[]{2, (2 + Math.sqrt(8))/3, 2});
-        for (int radius : new int[]{20,Integer.MAX_VALUE}) {
-            same(ClickFilter.adaptiveThresholds(new double[]{0,2,0}, radius, 0, .01),
-                    new double[]{2.0/3, 2.0/3, 2.0/3});
+        for (int radius : new int[]{1,2,20,Integer.MAX_VALUE}) {
+            for (double k : new double[]{0,1,3}) {
+                same(ClickFilter.adaptiveThresholds(scores, radius, k, .01), localThresholds(scores, radius, k, .01));
+            }
         }
-        double[] thresholds = ClickFilter.adaptiveThresholds(scores, 2, 3, .01);
-        require(thresholds.length == scores.length, "One threshold per score");
-        for (double threshold : thresholds)
-            require(Double.isFinite(threshold) && threshold >= .01, "Finite threshold above floor");
         require(Arrays.equals(scores, originalScores), "Adaptive statistics leave scores unchanged");
         same(ClickFilter.adaptiveThresholds(new double[]{0,0}, 2, 3, .02), new double[]{.02,.02});
         same(ClickFilter.adaptiveThresholds(new double[]{.5,.5}, 1, 3, .02), new double[]{.5,.5});
@@ -114,40 +106,7 @@ public final class AlgorithmChecks {
         double[] adaptive = ClickFilter.adaptiveThresholds(changingLevel, 1, 0, .01);
         require(adaptive[6] > adaptive[1], "Adaptive threshold follows changing local level");
 
-        // Shared validation policies.
-        for (double[] bad : new double[][]{null, new double[0], {Double.NaN}, {Double.POSITIVE_INFINITY}, {0, Double.NaN}}) {
-            invalid(() -> ClickFilter.simple(bad, .5));
-            invalid(() -> ClickFilter.windowed(bad, 4, 1, .2));
-            invalid(() -> ClickFilter.windowScoresRolling(bad, 4, 1));
-            invalid(() -> ClickFilter.interpolate(bad, List.of()));
-        }
-        for (double threshold : new double[]{0,-1,Double.NaN,Double.POSITIVE_INFINITY}) {
-            invalid(() -> ClickFilter.simple(input, threshold));
-            invalid(() -> ClickFilter.windowed(input, 4, 1, threshold));
-        }
-        for (int[] windows : new int[][]{{0,1},{1,1},{2,0},{2,3}}) {
-            invalid(() -> ClickFilter.windowScores(input, windows[0], windows[1]));
-            invalid(() -> ClickFilter.windowScoresRolling(input, windows[0], windows[1]));
-        }
-        for (List<ClickInterval> bad : Arrays.asList(null, Arrays.asList((ClickInterval)null),
-                List.of(new ClickInterval(0,4)), List.of(new ClickInterval(2,2), new ClickInterval(1,1)),
-                List.of(new ClickInterval(1,2), new ClickInterval(3,3)))) {
-            invalid(() -> ClickFilter.interpolate(input, bad));
-            invalid(() -> ClickFilter.interpolateLimited(input, bad, 1));
-        }
-        invalid(() -> ClickFilter.windowScores(new double[]{Double.MAX_VALUE}, 4, 1));
-        invalid(() -> ClickFilter.windowScoresRolling(new double[]{1e154,1e154}, 2, 1));
-        invalid(() -> ClickFilter.detectIntervals(new double[]{0}, 5, 4, 1, .2));
-        invalid(() -> ClickFilter.detectIntervals(new double[]{Double.NaN}, 4, 4, 1, .2));
-        invalid(() -> ClickFilter.detectIntervals(new double[]{1}, 4, 4, 1, new double[0]));
-        invalid(() -> ClickFilter.detectIntervals(new double[]{1}, 4, 4, 1, new double[]{0}));
-        invalid(() -> ClickFilter.adaptiveThresholds(null, 2, 3, .01));
-        invalid(() -> ClickFilter.adaptiveThresholds(scores, 0, 3, .01));
-        invalid(() -> ClickFilter.adaptiveThresholds(scores, 2, -1, .01));
-        invalid(() -> ClickFilter.adaptiveThresholds(scores, 2, Double.NaN, .01));
-        invalid(() -> ClickFilter.adaptiveThresholds(scores, 2, 3, 0));
-        invalid(() -> ClickFilter.adaptiveThresholds(new double[]{Double.NaN}, 2, 3, .01));
-        require(Arrays.equals(input, saved), "Invalid filters leave input unchanged");
+        // Prepared parameter generator validates student IDs.
         for (String id : new String[]{"", "123", "123456789", "abcd1234"}) invalid(() -> GenerateParameters.generate(id));
         require(GenerateParameters.generate("00000001").equals(GenerateParameters.generate("00000001")), "Reproducible leading-zero ID");
 
@@ -166,7 +125,7 @@ public final class AlgorithmChecks {
                 unchangedOutside(samples, repaired, found, 64);
             }
         }
-        same(ClickFilter.windowScoresRolling(samples,2048,20), ClickFilter.windowScores(samples,2048,20));
+        same(ClickFilter.windowScoresRolling(samples,2048,20), directScores(samples,2048,20));
         for (String id : new String[]{"00000000","11111111","99999999"}) {
             TestSignals.Example example = TestSignals.generate(GenerateParameters.generate(id));
             double[] repaired = ClickFilter.windowed(example.corrupted(),2048,20,.2);
@@ -181,9 +140,31 @@ public final class AlgorithmChecks {
             same(loaded.samples(),pcm);
             require(loaded.sampleRate() == 44100, "WAV sample rate");
         } finally { Files.deleteIfExists(path); }
-        System.out.println("Verification passed: " + checks + " assertions across all five tasks, invalid inputs, recording settings and WAV I/O.");
+        System.out.println("Verification passed: " + checks + " assertions across all five tasks, student IDs, recording settings and WAV I/O.");
     }
 
+    private static double[] directScores(double[] samples, int large, int small) {
+        if (samples.length < large) return new double[0];
+        double[] result = new double[samples.length - large + 1];
+        for (int n = 0; n < result.length; n++) {
+            double a = 0, b = 0;
+            for (int k = 0; k < large; k++) a += samples[n+k] * samples[n+k];
+            for (int k = 0; k < small; k++) { double v = samples[n+(large-small)/2+k]; b += v*v; }
+            result[n] = b/small-a/large;
+        }
+        return result;
+    }
+    private static double[] localThresholds(double[] scores, int radius, double k, double floor) {
+        double[] result = new double[scores.length];
+        for (int n = 0; n < scores.length; n++) {
+            int a = (int)Math.max(0L, (long)n-radius), end = (int)Math.min(scores.length, (long)n+radius+1);
+            double mean = 0, variance = 0;
+            for (int j = a; j < end; j++) mean += scores[j]/(end-a);
+            for (int j = a; j < end; j++) variance += Math.pow(scores[j]-mean,2)/(end-a);
+            result[n] = Math.max(floor,mean+k*Math.sqrt(variance));
+        }
+        return result;
+    }
     private static void unchangedOutside(double[] original, double[] result, List<ClickInterval> intervals, int width) {
         require(result != original && result.length == original.length, "Fresh repair of same length");
         boolean[] repaired = new boolean[original.length];

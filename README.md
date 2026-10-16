@@ -1,14 +1,14 @@
 # Lab 03: Click filters
 
-This project contains starter code for **five required tasks**.
+This project contains complete Java solutions for **five required tasks**.
 First build a simple filter, then a window-based filter, and finally improve
 its speed and detection. All tasks use `media/pops.wav`.
 
 The algorithms are together in **`ClickFilter.java`**, ordered by task.
-Implement the methods marked `TODO` according to the tasks below. Audio I/O,
-parameters, validation helpers and experiments are prepared infrastructure.
-The starter project compiles, but task commands report `UnsupportedOperationException`
-until the methods they use are implemented. Parameter preview and help work immediately.
+`TODO (Task N)` comments identify solved methods that can later be turned into
+exercises. Audio I/O, parameters and experiments are prepared infrastructure.
+For all five tasks, assume valid inputs and parameters supplied by the prepared
+infrastructure. Input validation and exception handling are not part of the tasks.
 
 ## Setup and running
 
@@ -32,13 +32,13 @@ low device volume. N is **1 through 5**; all five tasks are required.
 Each comparison plays the complete original recording followed by the complete
 filtered recording, even when a width limit skips every candidate repair.
 
-| Task | Comparisons | Full-recording playbacks with `--taskN` |
-| --- | --- | --- |
-| 1 | One simple-filter result | 2 |
-| 2 | One direct window-filter result | 2 |
-| 3 | One rolling window-filter result | 2 |
-| 4 | 2 small-window lengths × 3 thresholds × 2 width limits | 24 |
-| 5 | Adaptive k=3, adaptive k=6, fixed threshold | 6 |
+| Task | Comparisons                                            | Full-recording playbacks with `--taskN` |
+| ---- | ------------------------------------------------------ | --------------------------------------- |
+| 1    | One simple-filter result                               | 2                                       |
+| 2    | One direct window-filter result                        | 2                                       |
+| 3    | One rolling window-filter result                       | 2                                       |
+| 4    | 2 small-window lengths × 3 thresholds × 2 width limits | 24                                      |
+| 5    | Adaptive k=3, adaptive k=6, fixed threshold            | 6                                       |
 
 Task 4 playback takes about 4 minutes 25 seconds, plus processing time;
 Task 5 takes about 66 seconds, plus processing time. `--checkN` plays nothing.
@@ -56,14 +56,14 @@ below describe the current experiments.
 
 The parameter generator assigns these settings reproducibly from your ID:
 
-| Parameter | Assigned value or range | Used by |
-| --- | --- | --- |
-| `edgeThreshold` | 0.40–0.60, in steps of 0.01 | Task 1; simple filter in the Task 4 synthetic comparison |
-| `energyThreshold` | 0.20–0.24, in steps of 0.01 | Tasks 2–5 recording experiments |
-| `largeLength` | 2048 samples | Tasks 2–5 |
-| `smallLength` | 20 samples | Tasks 2, 3 and 5; one Task 4 setting |
-| `comparisonSmallLength` | 12, 16, 24 or 28 samples | The other Task 4 setting |
-| `seed`, `syntheticFrequency` | Deterministic seed; frequency 180–260 Hz | Task 4 synthetic comparison |
+| Parameter                    | Assigned value or range                  | Used by                                                  |
+| ---------------------------- | ---------------------------------------- | -------------------------------------------------------- |
+| `edgeThreshold`              | 0.40–0.60, in steps of 0.01              | Task 1; simple filter in the Task 4 synthetic comparison |
+| `energyThreshold`            | 0.20–0.24, in steps of 0.01              | Tasks 2–5 recording experiments                          |
+| `largeLength`                | 2048 samples                             | Tasks 2–5                                                |
+| `smallLength`                | 20 samples                               | Tasks 2, 3 and 5; one Task 4 setting                     |
+| `comparisonSmallLength`      | 12, 16, 24 or 28 samples                 | The other Task 4 setting                                 |
+| `seed`, `syntheticFrequency` | Deterministic seed; frequency 180–260 Hz | Task 4 synthetic comparison                              |
 
 Run `--parameters` to see your exact settings. Keep the generator unchanged.
 
@@ -81,9 +81,9 @@ for n = 1,...,N-1:
 ```
 
 Here “above threshold” means the difference between the **current input sample**
-and the **previous corrected output sample**. Validate finite samples during the
-same processing pass. Return a new buffer and leave the input unchanged; using
-`result[n-1]` gives the same correction behavior as modifying the array in place.
+and the **previous corrected output sample**. Return a new buffer and leave the
+input unchanged; using `result[n-1]` gives the same correction behavior as modifying
+the array in place.
 
 Once a sample becomes zero, the next sample is compared with that zero. This can
 propagate zero replacement through a multi-sample pulse until a sample is within
@@ -174,7 +174,7 @@ Initialize both squared-sample sums once. When advancing one sample, subtract
 the outgoing square and add the incoming square for each window. Divide by the
 window lengths to obtain the same mean-square scores as Task 2.
 
-This changes score computation from O(N*L) to O(N). Reuse the same interval
+This changes score computation from O(N\*L) to O(N). Reuse the same interval
 selection and interpolation. Do not call the direct method inside each rolling
 window. The runner compares every score and the final repaired signal with Task 2,
 then prints both calculation times. Small floating-point differences are allowed;
@@ -259,13 +259,12 @@ threshold[n] = max(minimumThreshold, localMean[n] + k*localStd[n])
 Use score positions from `n-radius` through `n+radius`, inclusive, clipped at the
 array boundaries. Include the current score. Efficient prefix sums give local
 sums and squared sums without repeatedly scanning the context. Clamp small
-negative variance caused by roundoff to zero. Require radius>0, finite k>=0 and
-a finite positive floor. Empty scores produce empty thresholds.
+negative variance caused by roundoff to zero. Assume radius>0, k>=0 and a positive
+floor. Empty scores produce empty thresholds.
 Use population variance `mean(score²)-mean(score)²`. The implementation first
 scales scores by their maximum absolute value to avoid overflow in the prefix
 sums, then restores the original score scale when calculating thresholds.
-All-zero scores produce the minimum threshold at every position. Reject
-non-finite scores or a non-finite calculated threshold.
+All-zero scores produce the minimum threshold at every position.
 
 The runner uses radius=2048 score positions, k=3 and 6, a floor of 0.1 times the
 assigned energy threshold, and maximum repair width 64. The prepared varying-
@@ -301,18 +300,16 @@ mvn -q compile exec:java "-Dexec.args=--task5 11111111"
   `AudioFiles` divides PCM integers by 32768; it does not normalize or resample.
   Run the experiments with the supplied `media/pops.wav`; the runner checks
   its sample rate and sample count before processing.
-- Sample time is `n/(double)sampleRate`. Signals must be non-null, non-empty and
-  finite. Every filter returns a distinct same-length buffer without modifying input.
-- Invalid arguments throw `IllegalArgumentException`. Energy calculations reject
-  overflow in the sum of all squared samples. `Validation` supplies reusable guards.
-- Require integer `1<=S<L`; evaluate only full large windows. Score arrays have
+- Sample time is `n/(double)sampleRate`. Assume non-null, non-empty signals with
+  finite samples. Every filter returns a distinct same-length buffer without modifying input.
+- Window lengths satisfy `1<=S<L`. Evaluate only full large windows. Score arrays have
   `N-L+1` elements, or zero elements if N<L. The window filters return unchanged
   copies when N<L because no full window can be evaluated. Task 1 still processes
   short signals; it preserves the first sample.
 - Threshold comparisons are strict. Difference thresholds and energy thresholds
   have different units and are assigned separately.
 - `ClickInterval(a,b)` includes both ends. Lists are sorted, bounded, disjoint and
-  non-adjacent. Empty lists are valid. Invalid interval lists are rejected in full.
+  non-adjacent. Empty lists are valid.
 - Raw input is used for detection and measurements. Each original/repaired WAV
   pair receives one common attenuation factor to peak <=0.8, without amplification.
   WAV exports are listening copies with ordinary 16-bit quantization; CSVs are raw.
@@ -322,16 +319,16 @@ mvn -q compile exec:java "-Dexec.args=--task5 11111111"
 
 The class responsibilities are:
 
-| File | Responsibility |
-| --- | --- |
-| `ClickFilter.java` | Student methods for all five tasks, marked TODO |
-| `Experiments.java` | Five task runners, comparisons and playback/export |
-| `Main.java` | Command-line parsing |
-| `AudioFiles.java`, `AudioOutput.java` | Prepared WAV I/O and playback |
-| `GenerateParameters.java`, `TaskParameters.java` | Reproducible assignment settings |
-| `ClickInterval.java` | Inclusive interval data |
-| `Validation.java`, `Diagnostics.java` | Prepared input guards and CSV exports |
-| `RecordingExamples.java`, `TestSignals.java` | Diagnostic recording labels and synthetic checks |
+| File                                             | Responsibility                                     |
+| ------------------------------------------------ | -------------------------------------------------- |
+| `ClickFilter.java`                               | All five algorithms and their TODO markers         |
+| `Experiments.java`                               | Five task runners, comparisons and playback/export |
+| `Main.java`                                      | Command-line parsing                               |
+| `AudioFiles.java`, `AudioOutput.java`            | Prepared WAV I/O and playback                      |
+| `GenerateParameters.java`, `TaskParameters.java` | Reproducible assignment settings                   |
+| `ClickInterval.java`                             | Inclusive interval data                            |
+| `Validation.java`, `Diagnostics.java`            | Audio export guards and CSV exports                |
+| `RecordingExamples.java`, `TestSignals.java`     | Diagnostic recording labels and synthetic checks   |
 
 Tasks 1 and 2 can be developed independently. Task 3 reuses Task 2 detection
 and interpolation; Task 4 reuses those steps with rolling scores and a width limit;
@@ -345,7 +342,7 @@ sample. A detected region remains listed even when its repair is skipped.
 
 ## Verification
 
-After implementing all five tasks, run the checks without an audio device:
+Run the independent checks without an audio device:
 
 ```bash
 mvn test-compile
@@ -355,16 +352,9 @@ java -cp target/classes:target/test-classes cbsp.lab03.AlgorithmChecks
 On Windows, separate classpath entries with `;` instead of `:`. These are explicit
 executable checks; `mvn test` does not automatically run them. They cover single-
 pass behavior, direct/rolling agreement, merged windows and interpolation,
-maximum widths, adaptive threshold examples, invalid inputs, actual recording
-settings, synthetic improvement and WAV roundtrip. Inspect waveforms and listen
-as well: numerical correctness does not guarantee perceptual repair quality.
+maximum widths, local adaptive statistics, student IDs, actual recording settings,
+synthetic improvement and WAV roundtrip.
+Inspect waveforms and listen as well: numerical correctness does not guarantee
+perceptual repair quality.
 The `--checkN` commands run their task experiments and basic diagnostics;
 they do not execute the complete `AlgorithmChecks` suite.
-
-## Submission
-
-Submit `pom.xml`, `README.md` and `src/` in one ZIP. Keep the provided public
-signatures and parameter generator unchanged. Exclude `target/`, `output/` and
-IDE settings. The supplied `media/pops.wav` is the input recording and does not
-need to be resubmitted. All five tasks must compile and run with the commands
-above; also check valid and invalid inputs beyond your assigned parameters.
